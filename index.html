@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sistema de Clientes</title>
+    <title>Sistema de Clientes - Bruno</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,7 +47,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📋 Sistema de Clientes</h1>
+        <h1>📋 Sistema de Clientes - Bruno</h1>
         
         <div class="form-section">
             <h3>➕ Novo Cliente</h3>
@@ -70,16 +70,12 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-        // Configuração do Supabase - URL CORRETA da sua imagem
-        const supabaseUrl = 'https://sarmjsbvqpuybnopgsi.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhcm1qc2J2cXFwdXlibm9wZ3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzIzOTQsImV4cCI6MjA3NDgwODM5NH0.Ihke9HLzEc215tJkXyPk7R3OuYH9j6yY2_Gr5wJtbQE';
+        // ✅ SEUS NOVOS DADOS DO PROJETO "BRUNO"
+        const supabaseUrl = 'https://lsskaqudqvppfwfoxsih.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxzc2thcXVkcXZwcGZ3Zm94c2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyNDIxMzEsImV4cCI6MjA3NDgxODEzMX0.-M8bTf68RVY_kVrVyZ_BEfROLOrykauRYJzS2OnH6Fo';
         
-        console.log('Iniciando conexão com Supabase...');
-        
-        // Criar cliente Supabase
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Cadastrar cliente
         document.getElementById('formCliente').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -99,11 +95,10 @@
                 document.getElementById('formCliente').reset();
                 
             } catch (error) {
-                document.getElementById('listaClientes').innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+                document.getElementById('listaClientes').innerHTML = `<div class="error">❌ ${error.message}</div>`;
             }
         });
 
-        // Carregar clientes
         async function carregarClientes() {
             try {
                 const { data: clientes, error } = await supabase.from('clientes').select('*').order('id', { ascending: false });
@@ -128,11 +123,10 @@
                     lista.innerHTML = html;
                 }
             } catch (error) {
-                document.getElementById('listaClientes').innerHTML = `<div class="error">❌ Erro ao carregar: ${error.message}</div>`;
+                document.getElementById('listaClientes').innerHTML = `<div class="error">❌ ${error.message}</div>`;
             }
         }
 
-        // Iniciar
         carregarClientes();
     </script>
 </body>
