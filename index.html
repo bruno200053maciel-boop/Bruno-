@@ -11,6 +11,8 @@
             background: #f0f2f5;
         }
         .container {
+            max-width: 800px;
+            margin: 0 auto;
             background: white;
             border-radius: 10px;
             padding: 20px;
@@ -19,10 +21,29 @@
         h1 { text-align: center; color: #333; margin-bottom: 20px; }
         .form-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
-        button { background: #007bff; color: white; border: none; padding: 15px; border-radius: 6px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .cliente-card { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 10px; 
+        }
+        button:hover { background: #0056b3; }
+        .cliente-card { 
+            background: white; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
         .error { background: #fee; color: #c00; padding: 15px; border-radius: 6px; margin: 10px 0; text-align: center; }
         .success { background: #dfd; color: #070; padding: 15px; border-radius: 6px; margin: 10px 0; text-align: center; }
+        .loading { background: #e3f2fd; color: #1976d2; padding: 15px; border-radius: 6px; margin: 10px 0; text-align: center; }
     </style>
 </head>
 <body>
@@ -32,7 +53,7 @@
         <div class="form-section">
             <h3>➕ Novo Cliente</h3>
             <form id="formCliente">
-                <input type="text" id="nome" placeholder="Nome completo" required>
+                <input type="text" id="nome" placeholder="Nome completo *" required>
                 <input type="email" id="email" placeholder="E-mail">
                 <input type="text" id="telefone" placeholder="Telefone">
                 <input type="text" id="endereco" placeholder="Endereço">
@@ -43,18 +64,46 @@
         <div>
             <h3>👥 Clientes Cadastrados</h3>
             <div id="listaClientes">
-                <div class="success">🔄 Conectando...</div>
+                <div class="loading">🔄 Carregando clientes...</div>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
+        // Configuração do Supabase - VERIFIQUE ESTES DADOS!
         const supabaseUrl = 'https://sarmjsbvqpuybncpgsj.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhcm1qc2J2cXFwdXlibm9wZ3NqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzIzOTQsImV4cCI6MjA3NDgwODM5NH0.Ihke9HLzEc215tJkXyPk7R3OuYH9j6yY2_Gr5wJtbQE';
         
+        console.log('Iniciando conexão com Supabase...');
+        
+        // Criar cliente Supabase
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+        // Testar conexão
+        async function testarConexao() {
+            try {
+                console.log('Testando conexão com Supabase...');
+                const { data, error } = await supabase.from('clientes').select('count').limit(1);
+                
+                if (error) {
+                    console.error('Erro na conexão:', error);
+                    document.getElementById('listaClientes').innerHTML = 
+                        `<div class="error">❌ Erro de conexão: ${error.message}</div>`;
+                    return false;
+                }
+                
+                console.log('✅ Conexão com Supabase estabelecida!');
+                return true;
+            } catch (error) {
+                console.error('Erro geral:', error);
+                document.getElementById('listaClientes').innerHTML = 
+                    `<div class="error">❌ Erro: ${error.message}</div>`;
+                return false;
+            }
+        }
+
+        // Cadastrar cliente
         document.getElementById('formCliente').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -65,40 +114,87 @@
                 endereco: document.getElementById('endereco').value
             };
 
+            // Mostrar loading
+            document.getElementById('listaClientes').innerHTML = '<div class="loading">🔄 Cadastrando cliente...</div>';
+
             try {
-                const { data, error } = await supabase.from('clientes').insert([cliente]).select();
-                if (error) throw error;
+                const { data, error } = await supabase
+                    .from('clientes')
+                    .insert([cliente])
+                    .select();
+
+                if (error) {
+                    throw new Error(`Erro ao cadastrar: ${error.message}`);
+                }
                 
-                document.getElementById('listaClientes').innerHTML = `<div class="success">✅ ${cliente.nome} cadastrado!</div>`;
+                document.getElementById('listaClientes').innerHTML = 
+                    `<div class="success">✅ ${cliente.nome} cadastrado com sucesso!</div>`;
+                
+                // Recarregar lista após 1 segundo
                 setTimeout(carregarClientes, 1000);
                 document.getElementById('formCliente').reset();
                 
             } catch (error) {
-                document.getElementById('listaClientes').innerHTML = `<div class="error">❌ ${error.message}</div>`;
+                console.error('Erro no cadastro:', error);
+                document.getElementById('listaClientes').innerHTML = 
+                    `<div class="error">❌ ${error.message}</div>`;
             }
         });
 
+        // Carregar clientes
         async function carregarClientes() {
             try {
-                const { data: clientes, error } = await supabase.from('clientes').select('*').order('data_cadastro', { ascending: false });
-                if (error) throw error;
+                console.log('Carregando clientes...');
+                const { data: clientes, error } = await supabase
+                    .from('clientes')
+                    .select('*')
+                    .order('data_cadastro', { ascending: false });
+
+                if (error) {
+                    throw new Error(`Erro ao carregar: ${error.message}`);
+                }
 
                 const lista = document.getElementById('listaClientes');
-                if (clientes.length === 0) {
-                    lista.innerHTML = '<div class="success">📝 Nenhum cliente</div>';
+                
+                if (!clientes || clientes.length === 0) {
+                    lista.innerHTML = '<div class="success">📝 Nenhum cliente cadastrado</div>';
                 } else {
                     let html = '';
                     clientes.forEach(cliente => {
-                        html += `<div class="cliente-card"><strong>${cliente.nome}</strong><br>📧 ${cliente.email || 'N/I'}<br>📞 ${cliente.telefone || 'N/I'}<br>📍 ${cliente.endereco || 'N/I'}<br>📅 ${new Date(cliente.data_cadastro).toLocaleDateString()}</div>`;
+                        const dataCadastro = cliente.data_cadastro ? 
+                            new Date(cliente.data_cadastro).toLocaleDateString('pt-BR') : 
+                            'Data não informada';
+                            
+                        html += `
+                            <div class="cliente-card">
+                                <strong>${cliente.nome}</strong><br>
+                                📧 ${cliente.email || 'Não informado'}<br>
+                                📞 ${cliente.telefone || 'Não informado'}<br>
+                                📍 ${cliente.endereco || 'Não informado'}<br>
+                                📅 ${dataCadastro}
+                            </div>
+                        `;
                     });
                     lista.innerHTML = html;
                 }
+                
             } catch (error) {
-                document.getElementById('listaClientes').innerHTML = `<div class="error">❌ ${error.message}</div>`;
+                console.error('Erro ao carregar clientes:', error);
+                document.getElementById('listaClientes').innerHTML = 
+                    `<div class="error">❌ ${error.message}</div>`;
             }
         }
 
-        carregarClientes();
+        // Inicializar
+        async function init() {
+            const conectado = await testarConexao();
+            if (conectado) {
+                await carregarClientes();
+            }
+        }
+
+        // Iniciar aplicação
+        init();
     </script>
 </body>
-  </html>
+</html>
